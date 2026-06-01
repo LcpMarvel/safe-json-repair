@@ -1,0 +1,30 @@
+[workspace]
+resolver = "3"
+members = ["crates/safe-json-repair", "crates/safe-json-repair-wasm"]
+# The fuzz crate uses libFuzzer and is built only under `cargo fuzz` (nightly);
+# keep it out of the normal workspace build/test.
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/tramito/safe-json-repair"
+rust-version = "1.85"
+license = "MIT"
+authors = ["LcpMarvel <lcpmarvel@gmail.com>"]
+
+[workspace.dependencies]
+serde_json = { version = "1.0.140", features = ["preserve_order"] }
+serde = { version = "1.0.219", features = ["derive"] }
+
+# Release profile — used for the shipped wasm artifact and native release
+# builds. We optimize for **speed** (`opt-level = 3`): measured against the
+# size-tuned `"z"`, full speed is ~25-32% faster on 1 MB inputs while costing
+# only ~0.5% (≈286 B) more gzipped wasm — not worth trading away. `lto` +
+# `codegen-units = 1` + `strip` keep the bytes lean either way.
+# (Native debug builds, which the test bar uses, are unaffected.)
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

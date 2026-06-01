@@ -1,0 +1,281 @@
+[
+  {
+    "name": "C1",
+    "desc": "premature root/parent close + sibling key",
+    "input": "{\"a\":1}, \"b\":2}",
+    "expect": {
+      "a": 1,
+      "b": 2
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C1-full",
+    "desc": "real sample: 4 lanes/11 edges + sibling summary, extra ]}",
+    "input": "{\"lanes\":[{\"id\":\"lane1\",\"name\":\"Customer\"},{\"id\":\"lane2\",\"name\":\"Sales\"},{\"id\":\"lane3\",\"name\":\"Warehouse\"},{\"id\":\"lane4\",\"name\":\"Billing\"}],\"edges\":[{\"id\":\"e1\",\"source\":\"n1\",\"target\":\"n2\"},{\"id\":\"e2\",\"source\":\"n2\",\"target\":\"n3\"},{\"id\":\"e3\",\"source\":\"n3\",\"target\":\"n4\"},{\"id\":\"e4\",\"source\":\"n4\",\"target\":\"n5\"},{\"id\":\"e5\",\"source\":\"n5\",\"target\":\"n6\"},{\"id\":\"e6\",\"source\":\"n6\",\"target\":\"n7\"},{\"id\":\"e7\",\"source\":\"n7\",\"target\":\"n8\"},{\"id\":\"e8\",\"source\":\"n8\",\"target\":\"n9\"},{\"id\":\"e9\",\"source\":\"n9\",\"target\":\"n10\"},{\"id\":\"e10\",\"source\":\"n10\",\"target\":\"n11\"},{\"id\":\"e11\",\"source\":\"n11\",\"target\":\"n12\"}]]}, \"summary\":\"Order-to-cash across four lanes.\"}",
+    "expect": {
+      "lanes": [
+        {
+          "id": "lane1",
+          "name": "Customer"
+        },
+        {
+          "id": "lane2",
+          "name": "Sales"
+        },
+        {
+          "id": "lane3",
+          "name": "Warehouse"
+        },
+        {
+          "id": "lane4",
+          "name": "Billing"
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "n1",
+          "target": "n2"
+        },
+        {
+          "id": "e2",
+          "source": "n2",
+          "target": "n3"
+        },
+        {
+          "id": "e3",
+          "source": "n3",
+          "target": "n4"
+        },
+        {
+          "id": "e4",
+          "source": "n4",
+          "target": "n5"
+        },
+        {
+          "id": "e5",
+          "source": "n5",
+          "target": "n6"
+        },
+        {
+          "id": "e6",
+          "source": "n6",
+          "target": "n7"
+        },
+        {
+          "id": "e7",
+          "source": "n7",
+          "target": "n8"
+        },
+        {
+          "id": "e8",
+          "source": "n8",
+          "target": "n9"
+        },
+        {
+          "id": "e9",
+          "source": "n9",
+          "target": "n10"
+        },
+        {
+          "id": "e10",
+          "source": "n10",
+          "target": "n11"
+        },
+        {
+          "id": "e11",
+          "source": "n11",
+          "target": "n12"
+        }
+      ],
+      "summary": "Order-to-cash across four lanes."
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C2",
+    "desc": "truncation, missing trailing closers",
+    "input": "{\"a\":{\"b\":1}",
+    "expect": {
+      "a": {
+        "b": 1
+      }
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C3",
+    "desc": "single stray closer",
+    "input": "{\"a\":1]}",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C4",
+    "desc": "trailing comma",
+    "input": "{\"a\":1,}",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "strip-trailing-commas"
+  },
+  {
+    "name": "C5",
+    "desc": "literal control char inside string",
+    "input": "{\"a\":\"l1\nl2\"}",
+    "expect": {
+      "a": "l1\nl2"
+    },
+    "strategy": "strip-controls"
+  },
+  {
+    "name": "C6",
+    "desc": "double-encoded JSON string",
+    "input": "\"{\\\"a\\\":1}\"",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "unwrap-double"
+  },
+  {
+    "name": "C7",
+    "desc": "markdown code fence inline",
+    "input": "```json{\"a\":1}```",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "strip-fences"
+  },
+  {
+    "name": "C8",
+    "desc": "stray closer mid-array then truncation",
+    "input": "{\"a\":[1,2}]}",
+    "expect": {
+      "a": [
+        1,
+        2
+      ]
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C9",
+    "desc": "safety: array sibling objects not merged",
+    "input": "{\"items\":[{\"x\":1},{\"y\":2}],\"n\":\"t\"]}",
+    "expect": {
+      "items": [
+        {
+          "x": 1
+        },
+        {
+          "y": 2
+        }
+      ],
+      "n": "t"
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "C10",
+    "desc": "safety: valid JSON, fast-path verbatim",
+    "input": "{\"a\":[1,2,3],\"b\":\"x\"}",
+    "expect": {
+      "a": [
+        1,
+        2,
+        3
+      ],
+      "b": "x"
+    },
+    "strategy": "parse"
+  },
+  {
+    "name": "C11",
+    "desc": "pure garbage to fallback",
+    "input": "not json at all",
+    "expect": null,
+    "strategy": "fallback"
+  },
+  {
+    "name": "C12",
+    "desc": "deeply nested truncation, bounded",
+    "input": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":1",
+    "expect": null,
+    "strategy": "any"
+  },
+  {
+    "name": "E1",
+    "desc": "oversized handled by parser (not maxlen here): half string",
+    "input": "{\"a\":\"unterm",
+    "expect": {
+      "a": "unterm"
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "E2",
+    "desc": "fenced multiline; fence strip composes, trailing-comma strip completes",
+    "input": "```json\n{\"a\":1,}\n```",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "strip-trailing-commas"
+  },
+  {
+    "name": "E3",
+    "desc": "empty input -> fallback",
+    "input": "",
+    "expect": null,
+    "strategy": "fallback"
+  },
+  {
+    "name": "E4",
+    "desc": "leading BOM/whitespace on valid json",
+    "input": "\n   {\"a\":1}",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "parse"
+  },
+  {
+    "name": "E5",
+    "desc": "valid bare string not over-unwrapped",
+    "input": "\"hello\"",
+    "expect": "hello",
+    "strategy": "parse"
+  },
+  {
+    "name": "E6",
+    "desc": "missing comma between members",
+    "input": "{\"a\":1 \"b\":2}",
+    "expect": {
+      "a": 1,
+      "b": 2
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "E7",
+    "desc": "stray closing brace at root start ignored",
+    "input": "{\"a\":1}}}}",
+    "expect": {
+      "a": 1
+    },
+    "strategy": "tolerant"
+  },
+  {
+    "name": "E8",
+    "desc": "nested premature close keeps sibling",
+    "input": "{\"o\":{\"a\":1}, \"b\":2}",
+    "expect": {
+      "o": {
+        "a": 1
+      },
+      "b": 2
+    },
+    "strategy": "parse"
+  }
+]

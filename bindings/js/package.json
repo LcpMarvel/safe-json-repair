@@ -1,0 +1,64 @@
+{
+  "name": "safe-json-repair",
+  "version": "0.1.0",
+  "description": "A JSON repair library that never throws and never silently drops data — keeps the sibling keys LLMs orphan with a stray closing delimiter.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "build": "npm run build:wasm && tsup",
+    "build:js": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.ts",
+    "test:only": "node --test test/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "json",
+    "json-repair",
+    "repair",
+    "fix-json",
+    "llm",
+    "tool-calling",
+    "structured-output",
+    "tolerant",
+    "parser",
+    "deepseek",
+    "openai"
+  ],
+  "author": "LcpMarvel <lcpmarvel@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tramito/safe-json-repair.git",
+    "directory": "bindings/js"
+  },
+  "homepage": "https://github.com/tramito/safe-json-repair#readme",
+  "bugs": {
+    "url": "https://github.com/tramito/safe-json-repair/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "binaryen": "^129.0.0",
+    "jsonrepair": "^3.14.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

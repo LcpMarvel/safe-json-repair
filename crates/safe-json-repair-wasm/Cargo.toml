@@ -1,0 +1,23 @@
+[package]
+name = "safe-json-repair-wasm"
+description = "wasm-bindgen wrapper over the safe-json-repair core — powers the npm package."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+safe-json-repair = { path = "../safe-json-repair" }
+serde_json = { workspace = true }
+serde = { workspace = true }
+wasm-bindgen = "0.2.122"
+serde-wasm-bindgen = "0.6.5"
+
+# A small panic hook + allocator tuning for wasm. `console_error_panic_hook`
+# is dev-only nicety; kept out to stay dependency-lean. The core never panics.

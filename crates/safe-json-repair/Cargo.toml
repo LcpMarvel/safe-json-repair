@@ -1,0 +1,22 @@
+[package]
+name = "safe-json-repair"
+description = "A JSON repair library that never throws and never silently drops data. Stack-aware tolerant parser recovers fields that other repair libraries lose."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+keywords = ["json", "repair", "llm", "parser", "tolerant"]
+categories = ["parsing", "encoding"]
+
+[dependencies]
+serde_json.workspace = true
+
+[dev-dependencies]
+serde = { workspace = true }
+criterion = "0.8.2"
+
+[[bench]]
+name = "repair"
+harness = false

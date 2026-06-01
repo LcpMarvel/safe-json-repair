@@ -1,0 +1,23 @@
+# Rust
+/target
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
+Cargo.lock.bak
+
+# Node / npm package (bindings/js) — match at any depth
+node_modules/
+dist/
+*.tsbuildinfo
+*.tgz
+npm-debug.log*
+
+# Generated wasm bindings (rebuilt by `npm run build:wasm`)
+bindings/js/src/generated/
+bindings/js/.wasm-build/
+
+# Claude Code local state
+.claude/scheduled_tasks.lock
+
+# macOS
+.DS_Store
