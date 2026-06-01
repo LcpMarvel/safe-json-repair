@@ -102,17 +102,32 @@ pub struct RepairResult {
 }
 ```
 
+## Tasks
+
+A [`justfile`](justfile) is the single cross-ecosystem entry point (it
+orchestrates both `cargo` and the npm/wasm binding — something a cargo alias
+can't). Install with `cargo install just`, then:
+
+```bash
+just                 # list all recipes
+just test            # Rust + JS tests
+just bench           # criterion benchmarks
+```
+
+Publishing is **two separate steps** (do them independently):
+
+```bash
+just publish-crate-dry  &&  just publish-crate   # → crates.io (needs `cargo login`)
+just publish-npm-dry    &&  just publish-npm     # → npm (prompts for 2FA code; run in a real terminal)
+```
+
 ## Quality
 
 The golden corpus in [`corpus/cases.json`](corpus/cases.json) is the executable,
 living spec. Each case asserts: recovers to valid JSON, equals the annotated
 `expect` object key-for-key, and hits the expected strategy. **Every binding runs
-the same file**, so all languages stay in lock-step.
-
-```bash
-cargo test                 # core: corpus + differential + robustness + doctests
-(cd bindings/js && npm test)  # JS binding against the same corpus
-```
+the same file**, so all languages stay in lock-step. Run with `just test`
+(or `cargo test -j 2` / `cd bindings/js && npm test` individually).
 
 * **Differential** — valid JSON must parse to exactly what `serde_json` /
   `JSON.parse` parses, report `Parse`, and never be marked `changed`.

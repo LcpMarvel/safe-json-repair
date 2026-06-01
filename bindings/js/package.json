@@ -45,12 +45,12 @@
   "author": "LcpMarvel <lcpmarvel@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tramito/safe-json-repair.git",
+    "url": "git+https://github.com/LcpMarvel/safe-json-repair.git",
     "directory": "bindings/js"
   },
-  "homepage": "https://github.com/tramito/safe-json-repair#readme",
+  "homepage": "https://github.com/LcpMarvel/safe-json-repair#readme",
   "bugs": {
-    "url": "https://github.com/tramito/safe-json-repair/issues"
+    "url": "https://github.com/LcpMarvel/safe-json-repair/issues"
   },
   "engines": {
     "node": ">=18"

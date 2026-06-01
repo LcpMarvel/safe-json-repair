@@ -8,7 +8,7 @@ exclude = ["fuzz"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-repository = "https://github.com/tramito/safe-json-repair"
+repository = "https://github.com/LcpMarvel/safe-json-repair"
 rust-version = "1.85"
 license = "MIT"
 authors = ["LcpMarvel <lcpmarvel@gmail.com>"]

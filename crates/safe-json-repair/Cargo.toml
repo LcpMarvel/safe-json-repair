@@ -9,6 +9,7 @@ license.workspace = true
 authors.workspace = true
 keywords = ["json", "repair", "llm", "parser", "tolerant"]
 categories = ["parsing", "encoding"]
+readme = "README.md"
 
 [dependencies]
 serde_json.workspace = true
