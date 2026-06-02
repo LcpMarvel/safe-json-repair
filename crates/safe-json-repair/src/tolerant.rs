@@ -426,3 +426,112 @@ impl Parser {
 pub fn parse(input: &str) -> Value {
     Parser::new(input).parse()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // --- \uXXXX escape handling (parse_unicode_escape) ---------------------
+
+    #[test]
+    fn bmp_unicode_escape() {
+        // The raw string keeps the backslash literal, so this is the JSON
+        // escape `é` -> é (exercises parse_unicode_escape, not the
+        // literal-char branch).
+        assert_eq!(parse("\"\\u00e9\""), Value::String("\u{e9}".into()));
+    }
+
+    #[test]
+    fn surrogate_pair_becomes_astral_char() {
+        // `😀` -> 😀 (U+1F600), reassembled from the surrogate halves.
+        assert_eq!(parse("\"\\uD83D\\uDE00\""), Value::String("\u{1F600}".into()));
+    }
+
+    #[test]
+    fn lone_high_surrogate_becomes_replacement_char() {
+        assert_eq!(parse(r#""\uD800""#), Value::String("\u{FFFD}".into()));
+    }
+
+    #[test]
+    fn high_surrogate_followed_by_non_low_consumes_both() {
+        // Second `\uXXXX` is consumed as the (bad) low half and the pair
+        // collapses to a single replacement char.
+        assert_eq!(parse(r#""\uD83D\uD83D""#), Value::String("\u{FFFD}".into()));
+    }
+
+    #[test]
+    fn short_unicode_escape_uses_digits_read() {
+        // Three hex digits then end-of-input -> code 0x004.
+        assert_eq!(parse(r#""\u004""#), Value::String("\u{4}".into()));
+    }
+
+    // --- string escapes ----------------------------------------------------
+
+    #[test]
+    fn known_escapes_decode() {
+        assert_eq!(
+            parse(r#""a\nb\tc\\d\/e""#),
+            Value::String("a\nb\tc\\d/e".into())
+        );
+    }
+
+    #[test]
+    fn unknown_escape_kept_literally() {
+        // `\x` is not a JSON escape; we keep both chars rather than invent one.
+        assert_eq!(parse(r#""a\xb""#), Value::String("a\\xb".into()));
+    }
+
+    #[test]
+    fn truncated_string_returns_accumulated() {
+        assert_eq!(parse(r#""unterm"#), Value::String("unterm".into()));
+    }
+
+    // --- numbers -----------------------------------------------------------
+
+    #[test]
+    fn number_forms() {
+        assert_eq!(parse("123"), json!(123));
+        assert_eq!(parse("1.5e3"), json!(1500.0));
+        assert_eq!(parse("-0"), json!(-0.0));
+    }
+
+    #[test]
+    fn malformed_number_run_becomes_null() {
+        // A token serde rejects (e.g. multiple dots) drops cleanly to null
+        // rather than panicking or being half-parsed.
+        assert_eq!(parse("1.2.3"), Value::Null);
+    }
+
+    // --- keywords ----------------------------------------------------------
+
+    #[test]
+    fn keywords_and_non_json_barewords() {
+        assert_eq!(parse("true"), Value::Bool(true));
+        assert_eq!(parse("false"), Value::Bool(false));
+        assert_eq!(parse("null"), Value::Null);
+        // NaN/Infinity are not JSON — we do not invent a value (no JSON5).
+        assert_eq!(parse("NaN"), Value::Null);
+        assert_eq!(parse("Infinity"), Value::Null);
+    }
+
+    // --- structural tolerance ----------------------------------------------
+
+    #[test]
+    fn missing_colon_after_key_is_tolerated() {
+        assert_eq!(parse(r#"{"a" 1}"#), json!({"a": 1}));
+    }
+
+    #[test]
+    fn missing_comma_between_array_elements() {
+        assert_eq!(parse("[1 2]"), json!([1, 2]));
+    }
+
+    #[test]
+    fn missing_own_closer_yields_to_ancestor() {
+        // The array has no closing `]`; it meets the object's `}`, sees an
+        // ancestor object owns it, and yields without consuming. Distinct path
+        // from the stray-closer case `{"a":[1,2}]}` (corpus C8).
+        assert_eq!(parse(r#"{"a":[1,2}"#), json!({"a": [1, 2]}));
+    }
+}

@@ -6,7 +6,7 @@ members = ["crates/safe-json-repair", "crates/safe-json-repair-wasm"]
 exclude = ["fuzz"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 repository = "https://github.com/LcpMarvel/safe-json-repair"
 rust-version = "1.85"

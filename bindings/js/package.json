@@ -1,6 +1,6 @@
 {
   "name": "safe-json-repair",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A JSON repair library that never throws and never silently drops data — keeps the sibling keys LLMs orphan with a stray closing delimiter.",
   "license": "MIT",
   "type": "module",

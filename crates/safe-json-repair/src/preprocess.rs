@@ -115,3 +115,124 @@ pub fn strip_trailing_commas(input: &str) -> String {
     }
     out.into_iter().collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- strip_code_fences -------------------------------------------------
+
+    #[test]
+    fn fence_inline_with_lang_tag() {
+        assert_eq!(
+            strip_code_fences("```json{\"a\":1}```").as_deref(),
+            Some("{\"a\":1}")
+        );
+    }
+
+    #[test]
+    fn fence_multiline_with_lang_tag() {
+        assert_eq!(
+            strip_code_fences("```json\n{\"a\":1}\n```").as_deref(),
+            Some("{\"a\":1}")
+        );
+    }
+
+    #[test]
+    fn fence_without_lang_tag() {
+        assert_eq!(
+            strip_code_fences("```\n{}\n```").as_deref(),
+            Some("{}")
+        );
+    }
+
+    #[test]
+    fn fence_open_only_no_closer() {
+        // Unterminated fence: still strips the opener and returns the body so
+        // the ladder can keep working on it.
+        assert_eq!(
+            strip_code_fences("```json\n{\"a\":1}").as_deref(),
+            Some("{\"a\":1}")
+        );
+    }
+
+    #[test]
+    fn not_fenced_returns_none() {
+        // None means "nothing to do" — distinct from "stripped to empty".
+        assert_eq!(strip_code_fences("{\"a\":1}"), None);
+    }
+
+    #[test]
+    fn fence_empty_body_returns_none() {
+        assert_eq!(strip_code_fences("``````"), None);
+        assert_eq!(strip_code_fences("```"), None);
+        assert_eq!(strip_code_fences("```json\n```"), None);
+    }
+
+    // --- escape_control_chars_in_strings -----------------------------------
+
+    #[test]
+    fn whitespace_controls_inside_string_are_escaped_not_dropped() {
+        // Literal newline/tab/cr bytes inside a string become their two-char
+        // escape sequences (D5), so multi-line values survive.
+        let input = "{\"a\":\"l1\nl2\tt\rr\"}";
+        assert_eq!(
+            escape_control_chars_in_strings(input),
+            "{\"a\":\"l1\\nl2\\tt\\rr\"}"
+        );
+    }
+
+    #[test]
+    fn other_control_chars_inside_string_are_dropped() {
+        // A NUL / 0x01 etc. is not recoverable JSON; drop it (matches CodeWhale).
+        let input = "{\"a\":\"x\u{0001}\u{0000}y\"}";
+        assert_eq!(escape_control_chars_in_strings(input), "{\"a\":\"xy\"}");
+    }
+
+    #[test]
+    fn controls_outside_strings_are_left_untouched() {
+        // A newline between tokens is insignificant whitespace — preserved.
+        let input = "{\n\"a\":1}";
+        assert_eq!(escape_control_chars_in_strings(input), input);
+    }
+
+    #[test]
+    fn escaped_quote_does_not_end_the_string_early() {
+        // The control pass must track escapes: `\"` keeps us inside the string,
+        // so a control after it is still treated as in-string.
+        let input = "{\"a\":\"he said \\\"hi\\\"\nbye\"}";
+        assert_eq!(
+            escape_control_chars_in_strings(input),
+            "{\"a\":\"he said \\\"hi\\\"\\nbye\"}"
+        );
+    }
+
+    // --- strip_trailing_commas ---------------------------------------------
+
+    #[test]
+    fn trailing_comma_in_object_and_array() {
+        assert_eq!(strip_trailing_commas("{\"a\":1,}"), "{\"a\":1}");
+        assert_eq!(strip_trailing_commas("[1,2,]"), "[1,2]");
+        assert_eq!(strip_trailing_commas("{\"a\":1 , }"), "{\"a\":1  }");
+    }
+
+    #[test]
+    fn comma_inside_string_is_preserved() {
+        // `,}` inside a string value must not be touched.
+        let input = "{\"a\":\"x,}\"}";
+        assert_eq!(strip_trailing_commas(input), input);
+    }
+
+    #[test]
+    fn final_dangling_comma_is_dropped() {
+        // A comma that is the last non-whitespace char (end-of-input lookahead).
+        assert_eq!(strip_trailing_commas("{\"a\":1},"), "{\"a\":1}");
+        assert_eq!(strip_trailing_commas("[1,2]  ,  "), "[1,2]    ");
+    }
+
+    #[test]
+    fn legitimate_commas_are_kept() {
+        let input = "{\"a\":1,\"b\":2}";
+        assert_eq!(strip_trailing_commas(input), input);
+    }
+}
