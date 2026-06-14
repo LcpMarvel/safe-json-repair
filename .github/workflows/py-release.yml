@@ -119,3 +119,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
+          # PyPI never allows re-uploading an identical filename. If a prior run
+          # uploaded some files (e.g. wheels) before failing, skip those on retry
+          # and upload only what's missing instead of erroring the whole job.
+          skip-existing: true
