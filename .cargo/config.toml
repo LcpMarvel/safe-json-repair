@@ -1,0 +1,11 @@
+# The Python binding (bindings/python) is a PyO3 `extension-module` cdylib: it
+# leaves CPython symbols (Py_True, …) to be resolved at runtime by the host
+# interpreter. maturin injects the right linker flag itself, but plain
+# `cargo build` does not — so on macOS we tell the linker to allow those
+# undefined symbols (`-undefined dynamic_lookup`). Linux/ELF already permits
+# undefined symbols in shared objects, so no setting is needed there.
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

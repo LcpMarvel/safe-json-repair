@@ -1,0 +1,31 @@
+# Workspace member built by maturin into a native CPython extension. Being a
+# member (not excluded) is what lets `maturin sdist` prune the workspace manifest
+# correctly — otherwise the sdist references the wasm crate it doesn't ship and
+# every source build fails. The root `.cargo/config.toml` supplies the macOS
+# linker flag so plain `cargo build`/`test` link this cdylib too.
+[package]
+name = "safe-json-repair-python"
+description = "PyO3 bindings over the safe-json-repair core — powers the PyPI package."
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[lib]
+# The compiled module name. Imported privately as `safe_json_repair._safe_json_repair`
+# and re-exported by the Python package's __init__.py.
+name = "_safe_json_repair"
+crate-type = ["cdylib"]
+
+[dependencies]
+safe-json-repair = { path = "../../crates/safe-json-repair" }
+# `abi3-py38`: build a single forward-compatible wheel that runs on CPython 3.8+
+# (matches `requires-python` in pyproject.toml). `extension-module` skips linking
+# libpython — symbols resolve at runtime in the host interpreter.
+pyo3 = { version = "0.29.0", features = ["extension-module", "abi3-py38"] }
+# Serde <-> native Python objects: serde_json::Value → dict/list/str/int/.../None,
+# exactly what `json.loads` would have produced.
+pythonize = "0.29.0"

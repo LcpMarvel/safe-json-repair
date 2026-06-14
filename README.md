@@ -38,8 +38,8 @@ The **Rust core** lives at the repo root; each language ships from
 ├── fuzz/                      # cargo-fuzz target for the core
 ├── corpus/cases.json          # the golden corpus — shared by EVERY binding
 ├── bindings/
-│   └── js/                    # npm package — thin wrapper over the core via WASM
-│       (python/ planned — see "Adding a binding" below)
+│   ├── js/                    # npm package — thin wrapper over the core via WASM
+│   └── python/                # PyPI package — thin wrapper over the core via PyO3
 └── PRD.md
 ```
 
@@ -47,7 +47,7 @@ The **Rust core** lives at the repo root; each language ships from
 |----------|----------|---------|--------|
 | **Rust** | `crates/safe-json-repair/` | `cargo add safe-json-repair` | ✅ core |
 | **JS/TS** | [`bindings/js/`](bindings/js/) | `npm i safe-json-repair` | ✅ shipped (WASM over the core) |
-| **Python** | `bindings/python/` | — | 🔜 planned (PyO3 over the core) |
+| **Python** | [`bindings/python/`](bindings/python/) | `pip install safe-json-repair` | ✅ shipped (PyO3 over the core, native) |
 
 ## The repair ladder
 
@@ -105,21 +105,29 @@ pub struct RepairResult {
 ## Tasks
 
 A [`justfile`](justfile) is the single cross-ecosystem entry point (it
-orchestrates both `cargo` and the npm/wasm binding — something a cargo alias
-can't). Install with `cargo install just`, then:
+orchestrates `cargo`, the npm/wasm binding, and the PyO3/maturin binding —
+something a cargo alias can't). Install with `cargo install just`, then:
 
 ```bash
 just                 # list all recipes
-just test            # Rust + JS tests
+just test            # Rust + JS + Python tests
 just bench           # criterion benchmarks
 ```
 
-Publishing is **two separate steps** (do them independently):
+Publishing is **separate steps** per ecosystem (do them independently):
 
 ```bash
 just publish-crate-dry  &&  just publish-crate   # → crates.io (needs `cargo login`)
 just publish-npm-dry    &&  just publish-npm     # → npm (prompts for 2FA code; run in a real terminal)
 ```
+
+**Python → PyPI is via CI**, not the justfile: pushing a `v*` tag triggers
+[`.github/workflows/py-release.yml`](.github/workflows/py-release.yml), which
+builds abi3 wheels for macOS (arm64/x86_64) + Linux (x86_64/aarch64) plus an
+sdist, smoke-tests them, and publishes via PyPI **Trusted Publishing** (OIDC — no
+token). One-time setup: register the Trusted Publisher on PyPI (owner
+`LcpMarvel`, repo `safe-json-repair`, workflow `py-release.yml`, environment
+`pypi`). `just publish-pypi-dry` builds the artifacts locally without uploading.
 
 ## Quality
 
@@ -127,7 +135,7 @@ The golden corpus in [`corpus/cases.json`](corpus/cases.json) is the executable,
 living spec. Each case asserts: recovers to valid JSON, equals the annotated
 `expect` object key-for-key, and hits the expected strategy. **Every binding runs
 the same file**, so all languages stay in lock-step. Run with `just test`
-(or `cargo test -j 2` / `cd bindings/js && npm test` individually).
+(or `just test-rust` / `just test-js` / `just test-py` individually).
 
 * **Differential** — valid JSON must parse to exactly what `serde_json` /
   `JSON.parse` parses, report `Parse`, and never be marked `changed`.
@@ -176,10 +184,11 @@ drift. A new language slots in as `bindings/<lang>/`:
 * **JS/TS** (`bindings/js/`) — the core compiled to WebAssembly via
   `wasm-bindgen`, inlined into the npm bundle. Universal (Node/Bun/Deno/browser/
   edge), synchronous API.
-* **Python** (planned, `bindings/python/`) — wrap the core with
+* **Python** (`bindings/python/`) — the core wrapped with
   [PyO3](https://pyo3.rs) + [maturin](https://www.maturin.rs): a thin
-  `#[pymodule]` over `safe_json_repair::repair`, `pyproject.toml`, and tests that
-  load `../../corpus/cases.json`. Native (no wasm) for backend Python.
+  `#[pymodule]` over `safe_json_repair::repair`, exposing `repair_json` /
+  `parse_json_safe` / `repair_json_string`. Tests load the same
+  `corpus/cases.json`. Native (no wasm) for backend Python.
 
 The principle: **logic lives once, in the core.** A fix to the parser lands in
 every language at the next build.

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "safe-json-repair"
+# Version is sourced from Cargo.toml (workspace version) — single source of truth,
+# so the PyPI package can't drift from the crate. See `dynamic` below.
+dynamic = ["version"]
+description = "Repair broken JSON from LLMs — never throws, never silently drops a field. Native (PyO3 over the Rust core)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+authors = [{ name = "LcpMarvel", email = "lcpmarvel@gmail.com" }]
+keywords = [
+    "json",
+    "json-repair",
+    "repair",
+    "fix-json",
+    "llm",
+    "tool-calling",
+    "structured-output",
+    "tolerant",
+    "parser",
+    "deepseek",
+    "openai",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Text Processing :: Markup",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/LcpMarvel/safe-json-repair"
+Repository = "https://github.com/LcpMarvel/safe-json-repair"
+"Bug Tracker" = "https://github.com/LcpMarvel/safe-json-repair/issues"
+
+[tool.maturin]
+# The compiled extension is placed inside the pure-Python `safe_json_repair`
+# package (python-source), which re-exports the public API from it.
+module-name = "safe_json_repair._safe_json_repair"
+python-source = "python"
+features = ["pyo3/extension-module"]

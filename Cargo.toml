@@ -1,8 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["crates/safe-json-repair", "crates/safe-json-repair-wasm"]
+members = ["crates/safe-json-repair", "crates/safe-json-repair-wasm", "bindings/python"]
 # The fuzz crate uses libFuzzer and is built only under `cargo fuzz` (nightly);
-# keep it out of the normal workspace build/test.
+# keep it out of the normal workspace build/test. The Python binding (a PyO3
+# cdylib) IS a member so `maturin sdist` prunes the workspace manifest correctly
+# — otherwise the sdist would reference the wasm member it doesn't ship and fail
+# every source build. pyo3's `extension-module` feature keeps it link-clean under
+# plain `cargo build`/`cargo test`.
 exclude = ["fuzz"]
 
 [workspace.package]

@@ -16,6 +16,16 @@ npm-debug.log*
 bindings/js/src/generated/
 bindings/js/.wasm-build/
 
+# Python package (bindings/python) — maturin/venv build artifacts
+# (dist/ is already ignored above; the binding shares the root workspace lock)
+bindings/python/.venv/
+bindings/python/target/
+bindings/python/Cargo.lock
+__pycache__/
+*.so
+.pytest_cache/
+*.egg-info/
+
 # Claude Code local state
 .claude/scheduled_tasks.lock
 
